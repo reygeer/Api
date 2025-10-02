@@ -164,6 +164,11 @@
       alert(`Sala creada con código: ${sala}`);
     });
 
+    // Error al intentar unirse
+    socket.on("errorSala", (msg) => {
+      alert(msg);
+    });
+
     // Actualizar lista de jugadores
     socket.on('listaJugadores', (jugadores) => {
       jugadoresDiv.innerHTML = '';
