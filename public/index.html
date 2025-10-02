@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Malilla Multijugador</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #1e293b; color: white; text-align: center; }
+    h1 { margin-bottom: 20px; }
+    .cartas-container { display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px; justify-items: center; }
+    .carta { width: 80px; height: 120px; background: white; color: black; border-radius: 10px;
+             display: flex; flex-direction: column; justify-content: center; align-items: center;
+             cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+    .carta:hover { transform: scale(1.05); }
+    .carta.seleccionada { background: #ff00fb; color: white; box-shadow: 0 0 10px #38bdf8; }
+    #jugadores { margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+  <h1>Cartas de la Malilla - Multijugador</h1>
+
+  <input type="text" id="nombre" placeholder="Tu nombre">
+  <button id="btnUnirse">Unirse</button>
+
+  <div class="cartas-container" id="cartasContainer"></div>
+
+  <h2>Jugadores conectados:</h2>
+  <div id="jugadores"></div>
+
+  <script>
+    const socket = io();
+
+    const palos = ["Oros", "Copas", "Espadas", "Bastos"];
+    const valores = ["2", "3", "4", "5", "6", "J", "Q", "K", "A", "7"];
+    const container = document.getElementById('cartasContainer');
+    const jugadoresDiv = document.getElementById('jugadores');
+
+    // Generar cartas
+    palos.forEach(palo => {
+      valores.forEach(valor => {
+        const carta = document.createElement('div');
+        carta.className = 'carta';
+        carta.innerHTML = `<div class="numero">${valor}</div><div class="palo">${palo}</div>`;
+        carta.addEventListener('click', () => {
+          socket.emit('cartaSeleccionada', { valor, palo });
+        });
+        container.appendChild(carta);
+      });
+    });
+
+    // Unirse con nombre
+    document.getElementById('btnUnirse').addEventListener('click', () => {
+      const nombre = document.getElementById('nombre').value;
+      if (nombre) socket.emit('registrarJugador', nombre);
+    });
+
+    // Actualizar lista de jugadores
+    socket.on("listaJugadores", (jugadores) => {
+      jugadoresDiv.innerHTML = "";
+      for (const id in jugadores) {
+        const p = document.createElement("p");
+        p.textContent = jugadores[id].nombre;
+        jugadoresDiv.appendChild(p);
+      }
+    });
+
+    // Mostrar estado de cartas seleccionadas
+    socket.on("estadoJuego", (jugadores) => {
+      // Reiniciar visual
+      document.querySelectorAll(".carta").forEach(c => c.classList.remove("seleccionada"));
+
+      // Marcar cartas de todos
+      for (const id in jugadores) {
+        jugadores[id].cartasSeleccionadas.forEach(carta => {
+          const cartaDom = [...document.querySelectorAll(".carta")]
+            .find(el => el.textContent.includes(carta.valor) && el.textContent.includes(carta.palo));
+          if (cartaDom) cartaDom.classList.add("seleccionada");
+        });
+      }
+    });
+  </script>
+</body>
+</html>
