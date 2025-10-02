@@ -11,7 +11,7 @@ const io = new Server(server);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Servir el index.html
+// Servir el index.html y assets
 app.use(express.static(__dirname));
 
 // Almacén de salas
@@ -21,6 +21,22 @@ let salas = {};
 io.on("connection", (socket) => {
   console.log("Jugador conectado:", socket.id);
 
+  // Crear sala
+  socket.on("crearSala", ({ nombre, sala }) => {
+    if (!salas[sala]) {
+      salas[sala] = { jugadores: {} };
+    }
+
+    salas[sala].jugadores[socket.id] = { nombre, cartasSeleccionadas: [] };
+    socket.join(sala);
+
+    // Avisar al creador
+    socket.emit("salaCreada", sala);
+
+    io.to(sala).emit("listaJugadores", salas[sala].jugadores);
+  });
+
+  // Unirse a sala
   socket.on("unirseSala", ({ nombre, sala }) => {
     if (!salas[sala]) {
       salas[sala] = { jugadores: {} };
@@ -32,6 +48,7 @@ io.on("connection", (socket) => {
     io.to(sala).emit("listaJugadores", salas[sala].jugadores);
   });
 
+  // Selección de carta
   socket.on("cartaSeleccionada", ({ valor, palo, sala }) => {
     if (!salas[sala] || !salas[sala].jugadores[socket.id]) return;
     
@@ -47,6 +64,7 @@ io.on("connection", (socket) => {
     io.to(sala).emit("estadoJuego", salas[sala].jugadores);
   });
 
+  // Desconexión
   socket.on("disconnect", () => {
     for (const sala in salas) {
       if (salas[sala].jugadores[socket.id]) {
