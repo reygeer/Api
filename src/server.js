@@ -6,20 +6,19 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static("public")); // carpeta para tu HTML y JS
+// Sirve archivos estáticos (HTML, CSS, JS)
+app.use(express.static("public"));
 
-let jugadores = {};  // { socketId: {nombre, cartasSeleccionadas: []} }
+let jugadores = {};
 
 io.on("connection", (socket) => {
-  console.log("Nuevo jugador conectado:", socket.id);
+  console.log("Jugador conectado:", socket.id);
 
-  // Registrar jugador
   socket.on("registrarJugador", (nombre) => {
     jugadores[socket.id] = { nombre, cartasSeleccionadas: [] };
     io.emit("listaJugadores", jugadores);
   });
 
-  // Cuando selecciona/deselecciona una carta
   socket.on("cartaSeleccionada", (carta) => {
     if (!jugadores[socket.id]) return;
     const seleccionadas = jugadores[socket.id].cartasSeleccionadas;
@@ -31,17 +30,17 @@ io.on("connection", (socket) => {
       seleccionadas.splice(index, 1);
     }
 
-    // Actualizar a todos
     io.emit("estadoJuego", jugadores);
   });
 
-  // Desconexión
   socket.on("disconnect", () => {
     delete jugadores[socket.id];
     io.emit("listaJugadores", jugadores);
   });
 });
 
-server.listen(3000, () => {
-  console.log("Servidor corriendo en http://localhost:3000");
+// Render da el puerto en process.env.PORT
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Servidor corriendo en puerto ${PORT}`);
 });
