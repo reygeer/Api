@@ -35,6 +35,7 @@
       color: black;
       font-weight: bold;
       cursor: pointer;
+      margin: 5px;
     }
 
     .cartas-container {
@@ -88,6 +89,7 @@
   <div class="nombre-input">
     <input type="text" id="nombre" placeholder="Tu nombre">
     <input type="text" id="sala" placeholder="Código de sala">
+    <button id="btnCrear">Crear Sala</button>
     <button id="btnUnirse">Unirse</button>
   </div>
 
@@ -124,13 +126,42 @@
       });
     });
 
-    // Evento unirse
+    // Función para generar código de sala aleatorio
+    function generarCodigoSala(longitud = 6) {
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let codigo = "";
+      for (let i = 0; i < longitud; i++) {
+        codigo += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return codigo;
+    }
+
+    // Crear sala
+    document.getElementById("btnCrear").addEventListener("click", () => {
+      const nombre = document.getElementById("nombre").value;
+      if (!nombre) {
+        alert("Ingresa tu nombre primero");
+        return;
+      }
+
+      const sala = generarCodigoSala(); // Código aleatorio
+      document.getElementById("sala").value = sala; // Mostrarlo en el input
+
+      socket.emit("crearSala", { nombre, sala });
+    });
+
+    // Unirse a sala
     document.getElementById('btnUnirse').addEventListener('click', () => {
       const nombre = document.getElementById('nombre').value;
       const sala = document.getElementById('sala').value;
       if (nombre && sala) {
         socket.emit('unirseSala', { nombre, sala });
       }
+    });
+
+    // Confirmación de sala creada
+    socket.on("salaCreada", (sala) => {
+      alert(`Sala creada con código: ${sala}`);
     });
 
     // Actualizar lista de jugadores
