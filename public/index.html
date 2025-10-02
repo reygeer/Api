@@ -5,23 +5,70 @@
   <title>Malilla Multijugador</title>
   <script src="/socket.io/socket.io.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; background-color: #1e293b; color: white; text-align: center; }
-    h1 { margin-bottom: 20px; }
-    .cartas-container { display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px; justify-items: center; }
-    .carta { width: 80px; height: 120px; background: white; color: black; border-radius: 10px;
-             display: flex; flex-direction: column; justify-content: center; align-items: center;
-             cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
-    .carta:hover { transform: scale(1.05); }
-    .carta.seleccionada { background: #ff00fb; color: white; box-shadow: 0 0 10px #38bdf8; }
-    #jugadores { margin-top: 20px; }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #1e293b;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .cartas-container {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 10px;
+      justify-items: center;
+      margin-top: 20px;
+    }
+    .carta {
+      width: 80px;
+      height: 120px;
+      background: white;
+      color: black;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+      user-select: none;
+    }
+    .carta:hover {
+      transform: scale(1.05);
+    }
+    .carta.seleccionada {
+      background: #ff00fb;
+      color: white;
+      box-shadow: 0 0 10px #38bdf8;
+    }
+    #jugadores {
+      margin-top: 30px;
+      text-align: left;
+      display: inline-block;
+      background: rgba(0,0,0,0.4);
+      padding: 15px;
+      border-radius: 10px;
+    }
+    #jugadores p {
+      margin: 5px 0;
+    }
+    .nombre-input {
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
 
   <h1>Cartas de la Malilla - Multijugador</h1>
 
-  <input type="text" id="nombre" placeholder="Tu nombre">
-  <button id="btnUnirse">Unirse</button>
+  <div class="nombre-input">
+    <input type="text" id="nombre" placeholder="Tu nombre">
+    <button id="btnUnirse">Unirse</button>
+  </div>
 
   <div class="cartas-container" id="cartasContainer"></div>
 
@@ -29,6 +76,7 @@
   <div id="jugadores"></div>
 
   <script>
+    // Conexión con el servidor
     const socket = io();
 
     const palos = ["Oros", "Copas", "Espadas", "Bastos"];
@@ -36,7 +84,7 @@
     const container = document.getElementById('cartasContainer');
     const jugadoresDiv = document.getElementById('jugadores');
 
-    // Generar cartas
+    // Generar cartas en la mesa
     palos.forEach(palo => {
       valores.forEach(valor => {
         const carta = document.createElement('div');
@@ -49,7 +97,7 @@
       });
     });
 
-    // Unirse con nombre
+    // Botón para unirse al juego
     document.getElementById('btnUnirse').addEventListener('click', () => {
       const nombre = document.getElementById('nombre').value;
       if (nombre) socket.emit('registrarJugador', nombre);
@@ -65,12 +113,12 @@
       }
     });
 
-    // Mostrar estado de cartas seleccionadas
+    // Mostrar cartas seleccionadas por todos
     socket.on("estadoJuego", (jugadores) => {
-      // Reiniciar visual
+      // Reiniciar selección visual
       document.querySelectorAll(".carta").forEach(c => c.classList.remove("seleccionada"));
 
-      // Marcar cartas de todos
+      // Marcar cartas seleccionadas
       for (const id in jugadores) {
         jugadores[id].cartasSeleccionadas.forEach(carta => {
           const cartaDom = [...document.querySelectorAll(".carta")]
